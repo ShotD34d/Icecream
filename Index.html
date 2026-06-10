@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloudberry Creamery | Bellevue, WA</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --pink:#ffdbe8;
+    --peach:#ffe8d9;
+    --mint:#dff6ee;
+    --lavender:#ebe5ff;
+    --cream:#fffaf5;
+    --brown:#6b5c56;
+    --shadow:0 12px 30px rgba(0,0,0,.08);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Quicksand',sans-serif;
+    background:var(--cream);
+    color:var(--brown);
+    line-height:1.6;
+}
+
+header{
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:rgba(255,250,245,.92);
+    backdrop-filter:blur(10px);
+}
+
+nav{
+    max-width:1200px;
+    margin:auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:1rem 2rem;
+}
+
+.logo{
+    font-family:'Pacifico',cursive;
+    font-size:1.8rem;
+    color:#ff7faa;
+}
+
+nav ul{
+    display:flex;
+    gap:2rem;
+    list-style:none;
+}
+
+nav a{
+    text-decoration:none;
+    color:var(--brown);
+    font-weight:600;
+}
+
+.hero{
+    min-height:90vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:2rem;
+    background:
+    radial-gradient(circle at top left,var(--pink),transparent 40%),
+    radial-gradient(circle at bottom right,var(--mint),transparent 40%);
+}
+
+.hero-content{
+    max-width:800px;
+}
+
+.hero h1{
+    font-family:'Pacifico',cursive;
+    font-size:4.5rem;
+    color:#ff7faa;
+    margin-bottom:1rem;
+}
+
+.hero p{
+    font-size:1.3rem;
+    margin-bottom:2rem;
+}
+
+.btn{
+    display:inline-block;
+    background:#ff9dbb;
+    color:white;
+    text-decoration:none;
+    padding:14px 30px;
+    border-radius:999px;
+    font-weight:700;
+    box-shadow:var(--shadow);
+}
+
+section{
+    padding:80px 20px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+.section-title{
+    text-align:center;
+    font-size:2.5rem;
+    margin-bottom:50px;
+}
+
+.flavors{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:25px;
+}
+
+.card{
+    padding:30px;
+    border-radius:24px;
+    box-shadow:var(--shadow);
+    background:white;
+    transition:.3s;
+}
+
+.card:hover{
+    transform:translateY(-6px);
+}
+
+.strawberry{background:var(--pink);}
+.vanilla{background:var(--peach);}
+.mint{background:var(--mint);}
+.lavender{background:var(--lavender);}
+
+.card h3{
+    margin-bottom:10px;
+    line-height:1.3;
+}
+
+.about{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:50px;
+    align-items:center;
+}
+
+.about-image{
+    height:400px;
+    border-radius:30px;
+    background:linear-gradient(135deg,var(--pink),var(--lavender));
+}
+
+.about-text h2{
+    margin-bottom:20px;
+}
+
+.hours{
+    background:linear-gradient(135deg,var(--mint),var(--lavender));
+    border-radius:30px;
+    padding:50px;
+    text-align:center;
+}
+
+.hours h2{
+    margin-bottom:20px;
+}
+
+footer{
+    text-align:center;
+    padding:50px 20px;
+    background:#fff3f8;
+}
+
+footer h3{
+    font-family:'Pacifico',cursive;
+    font-size:2rem;
+    color:#ff7faa;
+    margin-bottom:10px;
+}
+
+@media(max-width:768px){
+
+.hero h1{
+    font-size:3rem;
+}
+
+.about{
+    grid-template-columns:1fr;
+}
+
+nav ul{
+    display:none;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<nav>
+<div class="logo">Cloudberry Creamery</div>
+<ul>
+<li><a href="#flavors">Flavors</a></li>
+<li><a href="#about">About</a></li>
+<li><a href="#visit">Visit</a></li>
+</ul>
+</nav>
+</header>
+
+<section class="hero">
+<div class="hero-content">
+<h1>Sweet Scoops in Bellevue</h1>
+<p>
+Handcrafted ice cream made fresh with local ingredients,
+served in a cozy pastel shop designed for family memories,
+date nights, and summer strolls.
+</p>
+<a href="#flavors" class="btn">Explore Flavors</a>
+</div>
+</section>
+
+<section id="flavors">
+<div class="container">
+<h2 class="section-title">Favorite Flavors</h2>
+
+<div class="flavors">
+
+<div class="card strawberry">
+<h3>🍓 Strawberry Cloud</h3>
+<p>Fresh berry ice cream swirled with homemade strawberry jam.</p>
+</div>
+
+<div class="card vanilla">
+<h3>🍯 Honey Vanilla</h3>
+<p>Classic vanilla bean with local Washington honey.</p>
+</div>
+
+<div class="card mint">
+<h3>🌿 Mint Meadow</h3>
+<p>Creamy mint with handcrafted chocolate flakes.</p>
+</div>
+
+<div class="card lavender">
+<h3>💜 Lavender Dream</h3>
+<p>A Pacific Northwest favorite with delicate floral notes.</p>
+</div>
+
+</div>
+</div>
+</section>
+
+<section id="about">
+<div class="container about">
+
+<div class="about-image"></div>
+
+<div class="about-text">
+<h2>Made for Bellevue</h2>
+<p>
+Cloudberry Creamery was created to be a neighborhood gathering
+spot where families, friends, and visitors can enjoy premium
+small-batch ice cream in a warm and welcoming atmosphere.
+</p>
+
+<br>
+
+<p>
+Every scoop is crafted with care, inspired by the Pacific
+Northwest and the vibrant Bellevue community.
+</p>
+</div>
+
+</div>
+</section>
+
+<section id="visit">
+<div class="container">
+<div class="hours">
+
+<h2>Visit Us</h2>
+
+<p>
+📍 100 Main Street, Bellevue, WA
+</p>
+
+<br>
+
+<p>
+Sunday – Thursday: 12 PM – 10 PM<br>
+Friday – Saturday: 12 PM – 11 PM
+</p>
+
+<br>
+
+<p>
+📞 (425) 555-ICEC
+</p>
+
+</div>
+</div>
+</section>
+
+<footer>
+<h3>Cloudberry Creamery</h3>
+<p>Made with love, sprinkles, and a little Bellevue magic ✨</p>
+</footer>
+
+</body>
+</html>

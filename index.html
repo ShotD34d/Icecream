@@ -1,360 +1,438 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><script type='text/javascript' >
+const lsijVersion = 1;
+
+
+
+class Flags {
+	constructor(url, terms) {
+		this.url = url;
+		this.matched = {};
+
+		this.terms = [];
+		terms.forEach((term) => {
+			let s = term.replace(/[\]{}?^$().*\\+|[]/g, '\\$&');
+			s = s.replace(/\\\*/g, '.*');
+			s = s.replace(/\\\?/g, '.');
+			let regex = new RegExp('\\b' + s + '\\b', 'gi');
+			this.terms.push({term: term, regex: regex});
+		});
+	}
+
+	report(flags) {
+        console.debug('[LS Filter] flag report');
+		if (!flags.length)
+            return;
+
+		const xhr = new XMLHttpRequest();
+		xhr.open('POST', document.location.origin + '/772ff609488b2c9bb6bb2871cac430715c14f39e1462bea30062462d694cfd9a/log_flag', true);
+		console.debug('[LS Filter] sending -> ', flags);
+		xhr.send(JSON.stringify({
+			url: this.url.href,
+			flags: flags,
+			at_epoch_ms: Date.now()
+		}));
+	}
+
+	matchTerms(input, flagAll) {
+		const matches = [];
+		this.terms.forEach((term) => {
+			const hits = input.match(term.regex);
+			if (!hits || !hits.length)
+				return;
+
+			let added = false;
+			if (typeof(this.matched[term.term]) === 'undefined')
+				added = true
+
+			let count = hits.length;
+			if (!added)
+				count -= this.matched[term.term];
+
+			this.matched[term.term] = hits.length;
+
+			if (added || flagAll)
+				matches.push([term.term, count]);
+		});
+		return matches;
+	}
+
+	scanIntentValue(value) {
+		const matches = this.matchTerms(value, true);
+		const changes = [];
+		matches.forEach((match) => {
+			match[2] = true; // mark as user entered
+			changes.push(match);
+		});
+
+		if (changes.length)
+			this.report(changes);
+	}
+
+	scanIntentValues(values) {
+		values.forEach((value) => {
+			this.scanIntentValue(value);
+		});
+	}
+
+	scanIntentEvent(event) {
+		switch (event.target.tagName.toLowerCase()) {
+		case 'input':
+			let type = event.target.type || 'text';
+			type = type.toLowerCase();
+
+			// Dont scan password fields
+			if (type === 'password')
+				return;
+			this.scanIntentValue(event.target.value);
+			break;
+		case 'textarea':
+			this.scanIntentValue(event.target.value);
+			break;
+		}
+	}
+
+	scanIntent(event) {
+		if (typeof(gatherIntent) === 'function') {
+			const intent = gatherIntent();
+			if (intent.length)
+				this.scanIntentValues(intent);
+		}
+	}
+
+	onChange(event) {
+		this.scanIntentEvent(event);
+	}
+
+	onKeyup(event) {
+		this.scanIntentEvent(event);
+	}
+
+	bindDOM() {
+		document.addEventListener('change', this.onChange.bind(this));
+		document.addEventListener('keyup', this.onKeyup.bind(this));
+		setInterval(() => {
+			this.scanIntent();
+		}, 1000);
+	}
+}
+
+const initFlagScanning = function(terms) {
+	if (!terms.length)
+		return;
+
+	console.debug('[LS Filter] init flag scanning');
+	const a = document.createElement('A');
+	a.href = window.location.href;
+	const flags = new Flags(a, terms);
+	
+	console.debug('[LS Filter] flagging intent');
+	if (typeof(initGatherIntent) === 'function')
+		initGatherIntent();
+
+	flags.bindDOM();
+	
+};
+
+initFlagScanning(["suicide","glype","proxy","Anarchist cookbook","Become a terrorist","Binge and purge","binging and purging","Blow up school","Bitch","Bong rips","Bulimia ","Buy alcohol underage","Buy gun","Buy knives","commit suicide","Cock","Cunt","Cutting yourself","Dumb bitch","Dumbass","Dyke","Faggot","Gun in school","Fuck you","Heroin","Homemade bomb","How to hang yourself","How to become anorexic","How to get revenge","How to join a gang","How to join ISIS","How to kill","How to make myself throw up","How to sext","How to sneak things past security","I hate myself","I want to cut myself","kill you","Kill myself","I want to die","Make a bomb","Make a bong","Murder suicide","My life is shit","My life is worthless","Naked girls","Naked pics","nigga","Nigger","Pipe bomb","Porn","Pussy","Rape","Retard","Sex online","Slut","Smoke weed","Sneak gun in school","Suicide","Suicide bomb","Suicide by cop","Suicide vest","Where to buy drugs","White pride","Whore"]);
+
+
+
+function checkCurrentSite(yt, url) {
+  const xhr = new XMLHttpRequest();
+  const body = JSON.stringify({
+    url: url || window.location.href,
+    youtube: yt
+  });
+  console.log('[LS Filter] reporting ->', body);
+  const checkUrl = document.location.origin + '/772ff609488b2c9bb6bb2871cac430715c14f39e1462bea30062462d694cfd9a/log';
+  xhr.open('POST', checkUrl, true);
+  xhr.send(body);
+  xhr.onreadystatechange = function () {
+    if (this.status === 200 && xhr.responseText) {
+      const score = JSON.parse(xhr.responseText);
+      console.log('[LS Filter] score ->', score.allow);
+      if (score.redirect) {
+        window.location.href = score.redirect;
+        hardBlock();
+      }
+    }
+  };
+}
+
+let hardBlockPolicy;
+function getHardBlockPolicy() {
+  if (typeof(trustedTypes) !== 'undefined' && !hardBlockPolicy) {
+    hardBlockPolicy = trustedTypes.createPolicy('hardBlock', {
+      createHTML: (string) => string
+    });
+  }
+  return hardBlockPolicy;
+}
+
+function hardBlock() {
+  stopVideo();
+  const stopInt = setInterval(stopVideo, 500);
+  setTimeout(() => {
+    const policy = getHardBlockPolicy();
+    if (policy) {
+      document.body.innerHTML = policy.createHTML('<img src="/772ff609488b2c9bb6bb2871cac430715c14f39e1462bea30062462d694cfd9a/blocked-image-search.png" style="width: 100%; height: 100%">');
+    } else {
+      document.body.innerHTML = '<img src="/772ff609488b2c9bb6bb2871cac430715c14f39e1462bea30062462d694cfd9a/blocked-image-search.png" style="width: 100%; height: 100%">';
+    }
+    clearInterval(stopInt);
+  }, 3000)
+}
+
+function stopVideo() {
+  const ea = document.getElementsByTagName('video');
+  for (i in ea) {
+    if (typeof(ea[i].pause) !== 'function') {
+      continue;
+    }
+    if (!ea[i].paused) {
+        console.debug('[LS Filter] pause video');
+        ea[i].pause();
+    }
+  }
+}
+
+function googleVideo() {
+  if (window.location.href.match(/google\.com\/search\?/)) {
+    const vidMatcher = /google\.com\/search\?.*vid:([^#\&\?]{11})/;
+    let prevVideo;
+    new MutationObserver(function() {
+      console.log('[LS Filter] MutationObserver');
+      let video;
+      let m = window.location.href.match(vidMatcher)
+      if (m) {
+        video = m[1];
+      }
+      if (video === prevVideo) { return; }           
+      console.log('[LS Filter] scoring video ->', video);
+      prevVideo = video;
+      checkCurrentSite(true, 'https://www.youtube.com/watch?v=' + video);
+    }).observe(document, {subtree: true, childList: true});
+  }
+}
+
+function onLoad() {
+  console.log('[LS Filter] loaded');
+  if (window.top === window.self) {
+    console.log('[LS Filter] top window: ' + window.location.href);
+    googleVideo();
+  }
+}
+
+onLoad();
+
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dream Ice Cream | Bellevue, WA</title>
-
-<link href="https://googleapis.com" rel="stylesheet">
-
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-    --pink:#ffdbe8;
-    --peach:#ffe8d9;
-    --mint:#dff6ee;
-    --lavender:#ebe5ff;
-    --chocolate:#f5e6de;
-    --butternut:#fff2d4;
-    --blackberry:#f3e1f5;
-    --cream:#fffaf5;
-    --brown:#6b5c56;
-    --shadow:0 12px 30px rgba(0,0,0,.08);
+--cream:#fffaf5;--pink:#ffdbe8;--mint:#dff6ee;--lav:#ebe5ff;--berry:#8a5ea7;
+--brown:#5f514b;--accent:#ff7faa;--card:#ffffffcc;
 }
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-html {
-    scroll-behavior: smooth;
-}
-
-body{
-    font-family:'Quicksand',sans-serif;
-    background:var(--cream);
-    color:var(--brown);
-    line-height:1.6;
-}
-
-header{
-    position:sticky;
-    top:0;
-    z-index:100;
-    background:rgba(255,250,245,.92);
-    backdrop-filter:blur(10px);
-}
-
-nav{
-    max-width:1200px;
-    margin:auto;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:1rem 2rem;
-}
-
-.logo{
-    font-family:'Pacifico',cursive;
-    font-size:1.8rem;
-    color:#ff7faa;
-}
-
-nav ul{
-    display:flex;
-    gap:2rem;
-    list-style:none;
-}
-
-nav a{
-    text-decoration:none;
-    color:var(--brown);
-    font-weight:600;
-    transition: color 0.2s ease;
-}
-
-nav a:hover {
-    color: #ff7faa;
-}
-
-.hero{
-    min-height:90vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    padding:2rem;
-    background:
-    radial-gradient(circle at top left,var(--pink),transparent 40%),
-    radial-gradient(circle at bottom right,var(--mint),transparent 40%);
-}
-
-.hero-content{
-    max-width:800px;
-}
-
-.hero h1{
-    font-family:'Pacifico',cursive;
-    font-size:4.5rem;
-    color:#ff7faa;
-    margin-bottom:1rem;
-}
-
-.hero p{
-    font-size:1.3rem;
-    margin-bottom:2rem;
-}
-
-.btn{
-    display:inline-block;
-    background:#ff9dbb;
-    color:var(--brown);
-    text-decoration:none;
-    padding:14px 30px;
-    border-radius:999px;
-    font-weight:700;
-    box-shadow:var(--shadow);
-    transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.btn:hover {
-    transform: scale(1.05);
-    background: #ff7faa;
-    color: white;
-}
-
-section{
-    padding:80px 20px;
-}
-
-.container{
-    max-width:1200px;
-    margin:auto;
-}
-
-.section-title{
-    text-align:center;
-    font-size:2.5rem;
-    margin-bottom:50px;
-}
-
-.flavors{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:25px;
-}
-
-.card{
-    padding:30px;
-    border-radius:24px;
-    box-shadow:var(--shadow);
-    background:white;
-    transition:.3s;
-    color: var(--brown);
-}
-
-.card:hover{
-    transform:translateY(-6px);
-}
-
-.strawberry{background:var(--pink);}
-.vanilla{background:var(--peach);}
-.mint{background:var(--mint);}
-.lavender{background:var(--lavender);}
-.double-chocolate{background:var(--chocolate);}
-.butternut{background:var(--butternut);}
-.blackberry{background:var(--blackberry);}
-
-.card h3{
-    margin-bottom:10px;
-    line-height:1.3;
-}
-
-.about{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:50px;
-    align-items:center;
-}
-
-.about-image{
-    height:400px;
-    border-radius:30px;
-    background:linear-gradient(135deg,var(--pink),var(--lavender));
-}
-
-.about-text h2{
-    margin-bottom:20px;
-}
-
-.hours{
-    background:linear-gradient(135deg,var(--mint),var(--lavender));
-    border-radius:30px;
-    padding:50px;
-    text-align:center;
-}
-
-.hours h2{
-    margin-bottom:20px;
-}
-
-footer{
-    text-align:center;
-    padding:50px 20px;
-    background:#fff3f8;
-}
-
-footer h3{
-    font-family:'Pacifico',cursive;
-    font-size:2rem;
-    color:#ff7faa;
-    margin-bottom:10px;
-}
-
-@media(max-width:768px){
-
-.hero h1{
-    font-size:3rem;
-}
-
-.about{
-    grid-template-columns:1fr;
-}
-
-nav ul{
-    display:none;
-}
-
-}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Quicksand,sans-serif;background:var(--cream);color:var(--brown)}
+header{position:sticky;top:0;z-index:999;background:rgba(255,250,245,.85);backdrop-filter:blur(12px)}
+nav{max-width:1200px;margin:auto;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
+.logo{font-family:Pacifico,cursive;color:var(--accent);font-size:2rem}
+nav ul{display:flex;gap:1.2rem;list-style:none;flex-wrap:wrap}
+nav a{text-decoration:none;color:var(--brown);font-weight:700}
+.hero{min-height:92vh;display:grid;place-items:center;text-align:center;padding:2rem;background:
+radial-gradient(circle at top left,var(--pink),transparent 40%),
+radial-gradient(circle at bottom right,var(--mint),transparent 40%)}
+.hero h1{font-family:Pacifico,cursive;font-size:4.5rem;color:var(--accent)}
+.hero p{max-width:750px;margin:1rem auto;font-size:1.2rem}
+.btn{display:inline-block;padding:14px 28px;background:var(--accent);color:#fff;text-decoration:none;border-radius:999px;margin:.5rem}
+section{padding:80px 20px}
+.container{max-width:1200px;margin:auto}
+.title{text-align:center;font-size:2.5rem;margin-bottom:2rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.card{background:var(--card);padding:24px;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.08);transition:.3s}
+.card:hover{transform:translateY(-6px)}
+.spotlight{background:linear-gradient(135deg,var(--mint),var(--lav));padding:40px;border-radius:30px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
+.placeholder{height:220px;border-radius:20px;background:linear-gradient(135deg,var(--pink),var(--lav));display:grid;place-items:center;font-weight:700}
+.testimonial{font-style:italic}
+.faq details{background:white;margin:12px 0;padding:18px;border-radius:14px}
+form{display:grid;gap:12px}
+input,textarea{padding:14px;border-radius:10px;border:1px solid #ddd}
+button{padding:14px;border:none;border-radius:999px;background:var(--accent);color:white;cursor:pointer}
+footer{padding:50px 20px;text-align:center;background:#fff3f8}
+.dark{background:#222;color:#eee}
+.dark header{background:rgba(30,30,30,.85)}
+.dark .card,.dark details,.dark input,.dark textarea{background:#333;color:#eee}
+.toggle{position:fixed;right:20px;bottom:20px;border-radius:50%;width:55px;height:55px}
+.progress{position:fixed;top:0;left:0;height:4px;background:var(--accent);width:0;z-index:1000}
+.social a{text-decoration:none;margin:0 10px;color:var(--berry);font-weight:700}
+@media(max-width:800px){.two{grid-template-columns:1fr}.hero h1{font-size:3rem}}
 </style>
 </head>
-
 <body>
+<div class="progress" id="progress"></div>
 
 <header>
 <nav>
 <div class="logo">Dream Ice Cream</div>
 <ul>
 <li><a href="#flavors">Flavors</a></li>
-<li><a href="#about">About</a></li>
-<li><a href="#visit">Visit</a></li>
+<li><a href="#catering">Catering</a></li>
+<li><a href="#bellevue">Bellevue</a></li>
+<li><a href="#gallery">Gallery</a></li>
+<li><a href="#contact">Contact</a></li>
 </ul>
 </nav>
 </header>
 
 <section class="hero">
-<div class="hero-content">
-<h1>Sweet Scoops in Bellevue</h1>
-<p>
-Handcrafted ice cream made fresh with local ingredients,
-served in a cozy pastel shop designed for family memories,
-date nights, and summer strolls.
-</p>
-<a href="#flavors" class="btn">Explore Flavors</a>
+<div>
+<h1>Pacific Northwest Artisan Ice Cream</h1>
+<p>Small-batch ice cream inspired by Bellevue, local ingredients, and the flavors of the Pacific Northwest.</p>
+<a class="btn" href="#flavors">Explore Flavors</a>
+<a class="btn" href="#catering">Event Catering</a>
+</div>
+</section>
+
+<section>
+<div class="container spotlight">
+<h2>🍨 Flavor of the Month: Northwest Blackberry Bliss</h2>
+<p>Handcrafted blackberry ice cream inspired by Washington berry season.</p>
 </div>
 </section>
 
 <section id="flavors">
 <div class="container">
-<h2 class="section-title">Favorite Flavors</h2>
-
-<div class="flavors">
-
-<div class="card strawberry">
-<h3>🍓 Strawberry Cloud</h3>
-<p>Fresh berry ice cream swirled with homemade strawberry jam.</p>
-</div>
-
-<div class="card vanilla">
-<h3>🍯 Honey Vanilla</h3>
-<p>Classic vanilla bean with local Washington honey.</p>
-</div>
-
-<div class="card mint">
-<h3>🌿 Mint Meadow</h3>
-<p>Creamy mint infused with handcrafted dark chocolate flakes.</p>
-</div>
-
-<div class="card lavender">
-<h3>💜 Lavender Dream</h3>
-<p>A Pacific Northwest favorite with delicate floral notes.</p>
-</div>
-
-<div class="card double-chocolate">
-<h3>🍫 Double Chocolate</h3>
-<p>Rich Belgian cocoa blend loaded with homemade fudge chunks.</p>
-</div>
-
-<div class="card butternut">
-<h3>🌰 Toasted Butternut</h3>
-<p>Sweet, buttery cream base mixed with crunchy roasted nut praline.</p>
-</div>
-
-<div class="card blackberry">
-<h3>🍇 Wild Blackberry</h3>
-<p>Tart local mountain blackberries whipped into smooth velvet cream.</p>
-</div>
-
+<h2 class="title">Seasonal Flavors</h2>
+<div class="grid">
+<div class="card"><h3>🫐 Blackberry Bliss</h3><p>Local berry-inspired favorite.</p></div>
+<div class="card"><h3>💜 Lavender Honey Dream</h3><p>Floral and smooth.</p></div>
+<div class="card"><h3>🍁 Pumpkin Maple Crunch</h3><p>Autumn specialty.</p></div>
+<div class="card"><h3>🌲 Huckleberry Swirl</h3><p>Pacific Northwest classic.</p></div>
 </div>
 </div>
 </section>
 
-<section id="about">
-<div class="container about">
-
-<div class="about-image"></div>
-
-<div class="about-text">
-<h2>Made for Bellevue</h2>
-<p>
-Dream Ice Cream was created to be a neighborhood gathering
-spot where families, friends, and visitors can enjoy premium
-small-batch ice cream in a warm and welcoming atmosphere.
-</p>
-
-<br>
-
-<p>
-Every scoop is crafted with care, inspired by the Pacific
-Northwest and the vibrant Bellevue community.
-</p>
+<section>
+<div class="container two">
+<div class="card">
+<h2>Our Story</h2>
+<p>Dream Ice Cream celebrates Bellevue's vibrant community with handcrafted recipes, local inspiration, and a welcoming atmosphere for families, friends, and visitors.</p>
 </div>
-
+<div class="card">
+<h2>Rewards Club</h2>
+<p>Earn Scoop Points, birthday rewards, exclusive tastings, and referral bonuses.</p>
+</div>
 </div>
 </section>
 
-<section id="visit">
+<section id="catering">
 <div class="container">
-<div class="hours">
+<h2 class="title">Catering & Events</h2>
+<div class="grid">
+<div class="card"><h3>🎂 Birthday Parties</h3></div>
+<div class="card"><h3>💼 Corporate Events</h3></div>
+<div class="card"><h3>💍 Weddings</h3></div>
+<div class="card"><h3>🏫 School Celebrations</h3></div>
+</div>
+</div>
+</section>
 
-<h2>Visit Us</h2>
+<section id="bellevue">
+<div class="container">
+<h2 class="title">Made for Bellevue</h2>
+<div class="card">
+<p>Conveniently serving the Bellevue community near Downtown Bellevue, Bellevue Square, and Meydenbauer Bay. Free parking information and map can be added once your physical location is finalized.</p>
+</div>
+</div>
+</section>
 
-<p>
-📍 100 Main Street, Bellevue, WA
-</p>
+<section>
+<div class="container">
+<h2 class="title">Customer Love</h2>
+<div class="card testimonial" id="testimonial">
+“Best artisan ice cream experience in Bellevue!”
+</div>
+</div>
+</section>
 
-<br>
+<section id="gallery">
+<div class="container">
+<h2 class="title">Instagram Gallery</h2>
+<div class="gallery">
+<div class="placeholder">Add Photo</div>
+<div class="placeholder">Add Photo</div>
+<div class="placeholder">Add Photo</div>
+<div class="placeholder">Add Photo</div>
+</div>
+<p style="text-align:center;margin-top:20px">Tag us: #DreamIceCreamBellevue</p>
+<div class="social" style="text-align:center;margin-top:15px">
+<a href="#">Instagram</a>
+<a href="#">Facebook</a>
+<a href="#">TikTok</a>
+</div>
+</div>
+</section>
 
-<p>
-Sunday – Thursday: 12 PM – 10 PM<br>
-Friday – Saturday: 12 PM – 11 PM
-</p>
+<section>
+<div class="container faq">
+<h2 class="title">FAQ</h2>
+<details><summary>Do you cater events?</summary><p>Yes, from birthday parties to weddings.</p></details>
+<details><summary>Do you offer seasonal flavors?</summary><p>Yes, throughout the year.</p></details>
+<details><summary>Do you offer rewards?</summary><p>Yes, join Scoop Points.</p></details>
+</div>
+</section>
 
-<br>
-
-<p>
-📞 (425) 555-ICEC
-</p>
-
+<section id="contact">
+<div class="container">
+<h2 class="title">Contact Us</h2>
+<div class="card">
+<form onsubmit="event.preventDefault(); alert('Thank you! Your inquiry has been submitted.');">
+<input placeholder="Your Name" required>
+<input type="email" placeholder="Email Address" required>
+<input placeholder="Phone Number">
+<input placeholder="Event Date">
+<textarea rows="5" placeholder="Tell us about your event"></textarea>
+<button type="submit">Send Inquiry</button>
+</form>
 </div>
 </div>
 </section>
 
 <footer>
 <h3>Dream Ice Cream</h3>
-<p>Made with love, sprinkles, and a little Bellevue magic ✨</p>
+<p>Bellevue, Washington</p>
+<p>Made with love, local inspiration, and Pacific Northwest charm.</p>
 </footer>
 
+<button class="toggle" onclick="document.body.classList.toggle('dark')">🌙</button>
+
+<script>
+window.addEventListener('scroll',()=>{
+const h=document.documentElement;
+const sc=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
+document.getElementById('progress').style.width=sc+'%';
+});
+
+const testimonials=[
+"Best artisan ice cream experience in Bellevue!",
+"Our wedding guests loved the catering service.",
+"The lavender honey flavor is incredible."
+];
+let i=0;
+setInterval(()=>{
+i=(i+1)%testimonials.length;
+document.getElementById('testimonial').textContent='“'+testimonials[i]+'”';
+},4000);
+</script>
 </body>
 </html>

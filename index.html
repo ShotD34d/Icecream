@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cloudberry Creamery | Bellevue, WA</title>
+<title>Dream Ice Cream | Bellevue, WA</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://googleapis.com" rel="stylesheet">
 
 <style>
 :root{
@@ -13,6 +13,8 @@
     --peach:#ffe8d9;
     --mint:#dff6ee;
     --lavender:#ebe5ff;
+    --chocolate:#f5e6de;
+    --butternut:#fff2d4;
     --cream:#fffaf5;
     --brown:#6b5c56;
     --shadow:0 12px 30px rgba(0,0,0,.08);
@@ -22,6 +24,10 @@
     margin:0;
     padding:0;
     box-sizing:border-box;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body{
@@ -64,6 +70,11 @@ nav a{
     text-decoration:none;
     color:var(--brown);
     font-weight:600;
+    transition: color 0.2s ease;
+}
+
+nav a:hover {
+    color: #ff7faa;
 }
 
 .hero{
@@ -97,12 +108,19 @@ nav a{
 .btn{
     display:inline-block;
     background:#ff9dbb;
-    color:white;
+    color:var(--brown);
     text-decoration:none;
     padding:14px 30px;
     border-radius:999px;
     font-weight:700;
     box-shadow:var(--shadow);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    background: #ff7faa;
+    color: white;
 }
 
 section{
@@ -132,6 +150,7 @@ section{
     box-shadow:var(--shadow);
     background:white;
     transition:.3s;
+    color: var(--brown);
 }
 
 .card:hover{
@@ -142,6 +161,8 @@ section{
 .vanilla{background:var(--peach);}
 .mint{background:var(--mint);}
 .lavender{background:var(--lavender);}
+.double-chocolate{background:var(--chocolate);}
+.butternut{background:var(--butternut);}
 
 .card h3{
     margin-bottom:10px;
@@ -211,7 +232,7 @@ nav ul{
 
 <header>
 <nav>
-<div class="logo">Cloudberry Creamery</div>
+<div class="logo">Dream Ice Cream</div>
 <ul>
 <li><a href="#flavors">Flavors</a></li>
 <li><a href="#about">About</a></li>
@@ -250,12 +271,27 @@ date nights, and summer strolls.
 
 <div class="card mint">
 <h3>🌿 Mint Meadow</h3>
-<p>Creamy mint with handcrafted chocolate flakes.</p>
+<p>Creamy mint infused with handcrafted dark chocolate flakes.</p>
 </div>
 
 <div class="card lavender">
 <h3>💜 Lavender Dream</h3>
 <p>A Pacific Northwest favorite with delicate floral notes.</p>
+</div>
+
+<div class="card double-chocolate">
+<h3>🍫 Double Chocolate</h3>
+<p>Rich Belgian cocoa blend loaded with homemade fudge chunks.</p>
+</div>
+
+<div class="card butternut">
+<h3>🌰 Toasted Butternut</h3>
+<p>Sweet, buttery cream base mixed with crunchy roasted nut praline.</p>
+</div>
+
+<div class="card lavender">
+<h3>🍇 Wild Blackberry</h3>
+<p>Tart local mountain blackberries whipped into smooth velvet cream.</p>
 </div>
 
 </div>
@@ -270,7 +306,7 @@ date nights, and summer strolls.
 <div class="about-text">
 <h2>Made for Bellevue</h2>
 <p>
-Cloudberry Creamery was created to be a neighborhood gathering
+Dream Ice Cream was created to be a neighborhood gathering
 spot where families, friends, and visitors can enjoy premium
 small-batch ice cream in a warm and welcoming atmosphere.
 </p>
@@ -314,7 +350,7 @@ Friday – Saturday: 12 PM – 11 PM
 </section>
 
 <footer>
-<h3>Cloudberry Creamery</h3>
+<h3>Dream Ice Cream</h3>
 <p>Made with love, sprinkles, and a little Bellevue magic ✨</p>
 </footer>
 
